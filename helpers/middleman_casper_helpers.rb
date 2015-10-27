@@ -114,6 +114,7 @@ module MiddlemanCasperHelpers
   def home_path
     "#{blog.options.prefix.to_s}/"
   end
+
   def author_path
     "#{blog.options.prefix.to_s}/author/#{blog_author.name.parameterize}/"
   end

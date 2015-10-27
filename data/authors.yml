@@ -1,0 +1,17 @@
+
+carl:
+    name: 'Carl'
+    bio: 'Blah blahalakdsf lkasjfd alskfdjj;;adfl; akldsfjasdf;;lkjasdfj adsfl;jsdaf;jl'  # Optional
+    location: 'Nowhere nearby'  # Optional
+    website: 'ctfs.and.coffee' # Optional
+    gravatar_email: nil # Optional
+    avatar: '/images/carl_avatar.jpg'
+    twitter: nil # Optional
+
+bob:
+    name: 'Robert'
+    bio: nil # Optional
+    location: nil # Optional
+    website: nil # Optional
+    gravatar_email: nil # Optional
+    twitter: nil # Optional

@@ -3,6 +3,9 @@
 ###
 
 # Time.zone = "UTC"
+#
+
+#activate :my_extension
 
 activate :blog do |blog|
   # This will add a prefix to all links, template references and source paths
@@ -13,7 +16,7 @@ activate :blog do |blog|
   blog.sources = "articles/{year}-{month}-{day}-{title}.html"
   blog.taglink = "tag/{tag}.html"
   # blog.layout = "layout"
-  # blog.summary_separator = /(READMORE)/
+  blog.summary_separator = /(READMORE)/
   # blog.summary_length = 250
   # blog.year_link = "{year}.html"
   # blog.month_link = "{year}/{month}.html"
@@ -29,14 +32,22 @@ activate :blog do |blog|
   # blog.page_link = "page/{num}"
 end
 
+activate :deploy do |deploy|
+  deploy.method = :git
+  deploy.branch = 'master'
+  deploy.build_before = true
+end
+
+activate :authors
+
 set :casper, {
   blog: {
     url: 'http://www.example.com',
-    name: 'Middleman',
-    description: 'Makes developing websites simple.',
+    name: 'dangerpwn',
+    description: 'Documenting the pwnage.',
     date_format: '%d %B %Y',
     navigation: true,
-    logo: nil # Optional
+    logo: '/images/test_logo.png' # Optional
   },
   author: {
     name: 'Middleman',
@@ -64,7 +75,8 @@ ready do
     end
   end
 
-  proxy "/author/#{blog_author.name.parameterize}.html", '/author.html', ignore: true
+  #proxy "/author/#{blog_author.name.parameterize}.html", '/author.html', ignore: true
+  ignore '/author.html'
 end
 
 ###

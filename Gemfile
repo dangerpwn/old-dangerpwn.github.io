@@ -5,6 +5,10 @@ source 'http://rubygems.org'
 gem 'middleman', '~> 3.4.0'
 gem 'middleman-blog', '~> 3.5.3'
 gem 'middleman-livereload', '~> 3.4.3'
+gem 'middleman-deploy', '~> 1.0'
+#gem 'middleman-blog-authors', :git => 'https://github.com/bellycard/middleman-blog-authors.git'
+gem 'middleman-blog-authors', :path => '/Users/user/repos/middleman-blog-authors'
+#gem 'middleman-blog-ng-authors', :path => '/Users/user/repos/middleman-blog-ng-authors'
 
 # For feed.xml.builder
 gem 'builder', '~> 3.2.2'

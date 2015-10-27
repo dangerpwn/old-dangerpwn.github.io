@@ -10,9 +10,8 @@
         = summary(article)
         = link_to '&raquo;', article, class: 'read-more'
     %footer.post-meta
-      - if gravatar?
-        %img.author-thumb{src: gravatar(24), alt: blog_author.name, nopin: 'nopin'}
-      %a{href: author_path}= blog_author.name
+      - article.authors.each do |author|
+        %a{src: '/author/' + author.permalink}= author.name
       - if tags?(article)
         on #{tags(article)}
       %time.post-date{datetime: article.date.strftime('%Y-%m-%d')}
