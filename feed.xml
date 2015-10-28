@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<feed xmlns="http://www.w3.org/2005/Atom">
+  <title>dangerpwn</title>
+  <subtitle>Documenting the pwnage.</subtitle>
+  <id>http://ctfs.and.coffee</id>
+  <link href="http://ctfs.and.coffee"/>
+  <link href="http://ctfs.and.coffee/feed.xml" rel="self"/>
+  <updated>2015-10-28T10:48:00+11:00</updated>
+  <author>
+    <name>Middleman</name>
+  </author>
+  <entry>
+    <title>How to setup Middleman</title>
+    <link rel="alternate" href="http://ctfs.and.coffee/2015/10/27/how-to-setup-middleman/"/>
+    <id>http://ctfs.and.coffee/2015/10/27/how-to-setup-middleman/</id>
+    <published>2015-10-28T10:48:00+11:00</published>
+    <updated>2015-10-28T11:24:53+11:00</updated>
+    <author>
+      <name>Middleman</name>
+    </author>
+    <summary type="html">This post is a reference for myself regarding setting up new machines to post to and existing Middleman blog on github (such as this one). It does not describe how to create your own Middleman blog.
+
+First make sure you have the following dependencies</summary>
+  </entry>
+  <entry>
+    <title>Welcome to Ghost</title>
+    <link rel="alternate" href="http://ctfs.and.coffee/2013/10/26/welcome-to-ghost/"/>
+    <id>http://ctfs.and.coffee/2013/10/26/welcome-to-ghost/</id>
+    <published>2013-10-26T11:00:00+11:00</published>
+    <updated>2015-10-28T10:29:16+11:00</updated>
+    <author>
+      <name>Middleman</name>
+    </author>
+    <summary type="html">You’re in! Nice. We’ve put together a little post to introduce you to the Ghost
+editor and get you started. Go ahead and edit this post to get going and learn
+how it all works!
+
+Getting Started
+
+Writing in markdown is really easy. In the left hand panel</summary>
+  </entry>
+</feed>
