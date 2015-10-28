@@ -15,7 +15,7 @@ activate :blog do |blog|
   # Matcher for blog source files
   blog.sources = "articles/{year}-{month}-{day}-{title}.html"
   blog.taglink = "tag/{tag}.html"
-  # blog.layout = "layout"
+  blog.layout = "layouts/post.haml"
   blog.summary_separator = /(READMORE)/
   # blog.summary_length = 250
   # blog.year_link = "{year}.html"
@@ -42,7 +42,7 @@ activate :authors
 
 set :casper, {
   blog: {
-    url: 'http://www.example.com',
+    url: 'http://ctfs.and.coffee',
     name: 'dangerpwn',
     description: 'Documenting the pwnage.',
     date_format: '%d %B %Y',
@@ -126,6 +126,7 @@ activate :directory_indexes
 set :haml, { ugly: true }
 set :markdown_engine, :redcarpet
 set :markdown, fenced_code_blocks: true, smartypants: true, footnotes: true, link_attributes: { rel: 'nofollow' }, tables: true
+
 activate :syntax, line_numbers: false
 
 # Methods defined in the helpers block are available in templates

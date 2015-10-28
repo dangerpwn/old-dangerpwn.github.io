@@ -1,7 +1,7 @@
 
 carl:
     name: 'Carl'
-    bio: 'Blah blahalakdsf lkasjfd alskfdjj;;adfl; akldsfjasdf;;lkjasdfj adsfl;jsdaf;jl'  # Optional
+    bio: 'This is really a pretty poor bio.'  # Optional
     location: 'Nowhere nearby'  # Optional
     website: 'ctfs.and.coffee' # Optional
     gravatar_email: nil # Optional
