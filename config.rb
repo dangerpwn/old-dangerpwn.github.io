@@ -44,7 +44,7 @@ set :casper, {
   blog: {
     url: 'http://ctfs.and.coffee',
     name: 'dangerpwn',
-    description: 'Documenting the pwnage.',
+    description: '#flaglyf',
     date_format: '%d %B %Y',
     navigation: true,
     logo: '/images/test_logo.png' # Optional
