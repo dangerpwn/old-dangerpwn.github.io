@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<feed xmlns="http://www.w3.org/2005/Atom">
+  <title>dangerpwn: ruxcon</title>
+  <subtitle>Posts tagged with ruxcon</subtitle>
+  <id>http://ctfs.and.coffee</id>
+  <link href="http://ctfs.and.coffee"/>
+  <link href="http://ctfs.and.coffee/tag/ruxcon/feed.xml" rel="self"/>
+  <updated>2015-11-01T11:34:00+11:00</updated>
+  <author>
+    <name>Middleman</name>
+  </author>
+  <entry>
+    <title>Ruxcon 11 [Pwnable 2]</title>
+    <link rel="alternate" href="http://ctfs.and.coffee/2015/11/01/ruxcon-2015-pwnable-2/"/>
+    <id>http://ctfs.and.coffee/2015/11/01/ruxcon-2015-pwnable-2/</id>
+    <published>2015-11-01T11:34:00+11:00</published>
+    <updated>2015-11-03T13:13:16+11:00</updated>
+    <author>
+      <name>Middleman</name>
+    </author>
+    <summary type="html">This was the second pwnable challenge at Ruxcon 11. Players would SSH into a server running 64 bit Ubuntu and the SSH user’s home directory contained two files: level2 and tokenfile. file and cat quickly revealed that level2 is a x86-64 ELF executable</summary>
+  </entry>
+</feed>
