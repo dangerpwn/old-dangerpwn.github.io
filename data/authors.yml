@@ -8,6 +8,15 @@ carl:
     avatar: '/images/carl_avatar.jpg'
     twitter: nil # Optional
 
+tdrv:
+    name: 'Tom'
+    bio: 'The only acceptable IV is coffee.'
+    location: 
+    website: 'ctfs.and.coffee' # Optional
+    gravatar_email: nil # Optional
+    avatar: '/images/tom.jpg'
+    twitter: delightfulbaker # Optional
+
 bob:
     name: 'Robert'
     bio: nil # Optional
